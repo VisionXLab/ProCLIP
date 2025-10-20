@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center"><img src="assets/logo.png" alt="ProCLIP Logo" width="35" style="vertical-align: -25px; margin-right: 5px"/>ProCLIP: Progressive Vision-Language Alignment via LLM-based Embedder.</h1>
+  <h1 align="center"><img src="assets/logo.png" alt="ProCLIP Logo" width="35" style="vertical-align: -25px; margin-right: 5px"/>ProCLIP: Progressive Vision-Language Alignment via LLM-based Embedder</h1>
   <p align="center">
       <a href='https://scholar.google.com.hk/citations?user=zBM8_XkAAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Xiaoxing Hu</a><sup>1*</sup>&emsp;
       <a href='https://scholar.google.com.hk/citations?user=AQMkoXIAAAAJ&hl=zh-CN' style='text-decoration: none' >Kaicheng Yang</a><sup>1*</sup>&emsp;  
@@ -7,18 +7,16 @@
       <a href='https://scholar.google.com.hk/citations?user=zQCpqs8AAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Qi Ming</a><sup>4</sup>&emsp;
       <a href='https://scholar.google.com.hk/citations?user=h1I6LJcAAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Zonghao Guo</a><sup>5</sup>&emsp;
       <a href='https://scholar.google.com/citations?user=1ckaPgwAAAAJ&hl=zh-CN' style='text-decoration: none' >Xiang An</a><sup>2</sup>&emsp;
-      <a href='https://openreview.net/profile?id=~Ziyong_Feng1' style='text-decoration: none' >Ziyong Feng</a>2<sup></sup>&emsp;
+      <a href='https://openreview.net/profile?id=~Ziyong_Feng1' style='text-decoration: none' >Ziyong Feng</a><sup>2</sup>&emsp;
       <a href='https://scholar.google.com/citations?user=ga230VoAAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Junchi Yan</a><sup>3</sup>&emsp;
       <a href='https://scholar.google.com/citations?user=2xTlvV0AAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Xue Yang</a><sup>3†</sup>&emsp;
 
 <div align="center">
-
-<sup>1</sup> Beijing Institute of Technology <sup>2</sup> DeepGlint <sup>3</sup> Shanghai Jiao Tong University
-
-<sup>4</sup> Beijing University of Technology <sup>5</sup> Tsinghua University
-
+<div style="line-height:1.1;">
+<sup>1</sup> Beijing Institute of Technology <sup>2</sup> DeepGlint <sup>3</sup> Shanghai Jiao Tong University<br>
+<sup>4</sup> Beijing University of Technology <sup>5</sup> Tsinghua University<br>
 <sup>*</sup> Equal contribution <sup>†</sup> Corresponding author
-
+</div>
 
 </div>
     <p align='center'>
