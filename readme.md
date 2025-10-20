@@ -34,7 +34,7 @@ Official PyTorch implementation of [ProCLIP: Progressive Vision-Language Alignme
 
 
 ## Notice
-This repository is still being organized and refined. If you encounter any issues while using it, please contact |Email: xiaoxinghhh@gmail.com|WeChat: 15717699268| or submit an issue. Thank you for your attention.
+This repository is still being organized and refined. If you encounter any issues while using it, please contact |Email: xiaoxinghhh@gmail.com|WeChat: 15111480307| or submit an issue. Thank you for your attention.
 
 ## TODO
 - [ ] Training and validation instruction
