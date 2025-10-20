@@ -38,7 +38,7 @@ This repository is still being organized and refined. If you encounter any issue
 
 ## TODO
 - [ ] Training and validation instruction
-- [ ] paper link
+- [ ] Paper Link
 - [ ] Model Weights
 
 ## 📖 Introduction
