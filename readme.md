@@ -1,15 +1,15 @@
 <p align="center">
   <h1 align="center"><img src="assets/logo.png" alt="ProCLIP Logo" width="35" style="vertical-align: -25px; margin-right: 5px"/>ProCLIP: Progressive Vision-Language Alignment via LLM-based Embedder.</h1>
   <p align="center">
-      <a href='https://scholar.google.com.hk/citations?user=zBM8_XkAAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Xiaoxing Hu</a><sup></sup>&emsp;
-      <a href='https://scholar.google.com.hk/citations?user=AQMkoXIAAAAJ&hl=zh-CN' style='text-decoration: none' >Kaicheng Yang</a><sup></sup>&emsp;  
-      <a href='https://scholar.google.com.hk/citations?user=cWip8QgAAAAJ&hl=zh-CN' style='text-decoration: none' >Ziyang Gong</a><sup></sup>&emsp;
-      <a href='https://scholar.google.com.hk/citations?user=zQCpqs8AAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Qi Ming</a><sup></sup>&emsp;
-      <a href='https://scholar.google.com.hk/citations?user=h1I6LJcAAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Zonghao Guo</a><sup></sup>&emsp;
-      <a href='https://scholar.google.com/citations?user=1ckaPgwAAAAJ&hl=zh-CN' style='text-decoration: none' >Xiang An</a><sup></sup>&emsp;
-      <a href='https://openreview.net/profile?id=~Ziyong_Feng1' style='text-decoration: none' >Ziyong Feng</a><sup></sup>&emsp;
-      <a href='https://scholar.google.com/citations?user=ga230VoAAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Junchi Yan</a><sup></sup>&emsp;
-      <a href='https://scholar.google.com/citations?user=2xTlvV0AAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Xue Yang</a><sup></sup>&emsp;
+      <a href='https://scholar.google.com.hk/citations?user=zBM8_XkAAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Xiaoxing Hu</a><sup>1*</sup>&emsp;
+      <a href='https://scholar.google.com.hk/citations?user=AQMkoXIAAAAJ&hl=zh-CN' style='text-decoration: none' >Kaicheng Yang</a><sup>1*</sup>&emsp;  
+      <a href='https://scholar.google.com.hk/citations?user=cWip8QgAAAAJ&hl=zh-CN' style='text-decoration: none' >Ziyang Gong</a><sup>3</sup>&emsp;
+      <a href='https://scholar.google.com.hk/citations?user=zQCpqs8AAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Qi Ming</a><sup>4</sup>&emsp;
+      <a href='https://scholar.google.com.hk/citations?user=h1I6LJcAAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Zonghao Guo</a><sup>5</sup>&emsp;
+      <a href='https://scholar.google.com/citations?user=1ckaPgwAAAAJ&hl=zh-CN' style='text-decoration: none' >Xiang An</a><sup>2</sup>&emsp;
+      <a href='https://openreview.net/profile?id=~Ziyong_Feng1' style='text-decoration: none' >Ziyong Feng</a>2<sup></sup>&emsp;
+      <a href='https://scholar.google.com/citations?user=ga230VoAAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Junchi Yan</a><sup>3</sup>&emsp;
+      <a href='https://scholar.google.com/citations?user=2xTlvV0AAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Xue Yang</a><sup>✉️</sup>&emsp;
       <!-- <h3 align='center'>CVPR 2025</h3> -->
       <div align="center">
       <!-- <!-- <a href='https://arxiv.org/abs/2501.04440'><img src='https://img.shields.io/badge/arXiv-2501.04440-brown.svg?logo=arxiv&logoColor=white'></a> -->
