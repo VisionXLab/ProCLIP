@@ -39,14 +39,15 @@ This repository is still being organized and refined. If you encounter any issue
 ## TODO
 - [ ] Training and validation instruction
 - [ ] Paper Link
-- [ ] Model Weights
+- [x] Model Weights
 
 ## 📖 Introduction
 
 This repository contains the official pytorchimplementation of [ProCLIP: Progressive Vision-Language Alignment via LLM-based Embedder.]. We introduce a progressive vision-language alignment approach that aligns the LLM-based embedder with the CLIP image encoder in a curriculum learning manner to enhance long-text, multilingual, and fine-grained understanding.
 
-Paper: [Paper Link]()
-Model: [Model Zoo]()
+Paper Link: [![arXiv](https://img.shields.io/badge/arXiv-2305.12345-b31b1b.svg)]()
+Model Zoo: [![HuggingFace](https://img.shields.io/badge/HuggingFace-Model-yellow.svg?logo=huggingface)](https://huggingface.co/wsdwJohn1231/ProCLIP_weight)
+
 
 ## 📖 Methodology
 
