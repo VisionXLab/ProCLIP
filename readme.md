@@ -1,19 +1,19 @@
 <p align="center">
   <h1 align="center"><img src="assets/logo.png" alt="ProCLIP Logo" width="35" style="vertical-align: -25px; margin-right: 5px"/>ProCLIP: Progressive Vision-Language Alignment via LLM-based Embedder</h1>
   <p align="center">
-      <a href='https://scholar.google.com.hk/citations?user=zBM8_XkAAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Xiaoxing Hu</a><sup>1*</sup>&emsp;
-      <a href='https://scholar.google.com.hk/citations?user=AQMkoXIAAAAJ&hl=zh-CN' style='text-decoration: none' >Kaicheng Yang</a><sup>2*</sup>&emsp;  
-      <a href='https://scholar.google.com.hk/citations?user=cWip8QgAAAAJ&hl=zh-CN' style='text-decoration: none' >Ziyang Gong</a><sup>3</sup>&emsp;
+      <a href='https://scholar.google.com.hk/citations?user=zBM8_XkAAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Xiaoxing Hu</a><sup>1,2*</sup>&emsp;
+      <a href='https://scholar.google.com.hk/citations?user=AQMkoXIAAAAJ&hl=zh-CN' style='text-decoration: none' >Kaicheng Yang</a><sup>3*</sup>&emsp;  
+      <a href='https://scholar.google.com.hk/citations?user=cWip8QgAAAAJ&hl=zh-CN' style='text-decoration: none' >Ziyang Gong</a><sup>1</sup>&emsp;
       <a href='https://scholar.google.com.hk/citations?user=zQCpqs8AAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Qi Ming</a><sup>4</sup>&emsp;
       <a href='https://scholar.google.com.hk/citations?user=h1I6LJcAAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Zonghao Guo</a><sup>5</sup>&emsp;
-      <a href='https://scholar.google.com/citations?user=1ckaPgwAAAAJ&hl=zh-CN' style='text-decoration: none' >Xiang An</a><sup>2</sup>&emsp;
-      <a href='https://openreview.net/profile?id=~Ziyong_Feng1' style='text-decoration: none' >Ziyong Feng</a><sup>2</sup>&emsp;
-      <a href='https://scholar.google.com/citations?user=ga230VoAAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Junchi Yan</a><sup>3</sup>&emsp;
-      <a href='https://scholar.google.com/citations?user=2xTlvV0AAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Xue Yang</a><sup>3†</sup>&emsp;
+      <a href='https://scholar.google.com/citations?user=1ckaPgwAAAAJ&hl=zh-CN' style='text-decoration: none' >Xiang An</a><sup>3</sup>&emsp;
+      <a href='https://openreview.net/profile?id=~Ziyong_Feng1' style='text-decoration: none' >Ziyong Feng</a><sup>3</sup>&emsp;
+      <a href='https://scholar.google.com/citations?user=ga230VoAAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Junchi Yan</a><sup>1</sup>&emsp;
+      <a href='https://scholar.google.com/citations?user=2xTlvV0AAAAJ&hl=zh-CN&oi=ao' style='text-decoration: none' >Xue Yang</a><sup>1†</sup>&emsp;
 
 <div align="center">
 <div style="line-height:1.1;">
-<sup>1</sup> Beijing Institute of Technology <sup>2</sup> DeepGlint <sup>3</sup> Shanghai Jiao Tong University<br>
+<sup>1</sup>Shanghai Jiao Tong University <sup>2</sup> Beijing Institute of Technology <sup>3</sup> DeepGlint <br>
 <sup>4</sup> Beijing University of Technology <sup>5</sup> Tsinghua University<br>
 <sup>*</sup> Equal contribution <sup>†</sup> Corresponding author
 </div>
@@ -38,19 +38,22 @@ This repository is still being organized and refined. If you encounter any issue
 
 ## TODO
 - [ ] Training and validation instruction
-- [ ] Paper Link
+- [x] Paper Link
 - [x] Model Weights
 
+## 📢 News
+- [2025-10-20] We have model weights, please check the [Model Zoo](https://huggingface.co/VisionXLab/ProCLIP) for details.
+- [2025-10-22] We have update the paper, please check the [arXiv](https://arxiv.org/abs/2510.18795) for details.
 ## 📖 Introduction
 
 This repository contains the official pytorchimplementation of [ProCLIP: Progressive Vision-Language Alignment via LLM-based Embedder.]. We introduce a progressive vision-language alignment approach that aligns the LLM-based embedder with the CLIP image encoder in a curriculum learning manner to enhance long-text, multilingual, and fine-grained understanding.
 
-Paper Link: [![arXiv](https://img.shields.io/badge/arXiv-2305.12345-b31b1b.svg)]()
+Paper Link: [![arXiv](https://img.shields.io/badge/arXiv-2510.18795-b31b1b.svg)](https://arxiv.org/abs/2510.18795)
 
-Model Zoo: [![HuggingFace](https://img.shields.io/badge/HuggingFace-Model-yellow.svg?logo=huggingface)](https://huggingface.co/wsdwJohn1231/ProCLIP_weight)
+Model Zoo: [![HuggingFace](https://img.shields.io/badge/HuggingFace-Model-yellow.svg?logo=huggingface)](https://huggingface.co/VisionXLab/ProCLIP)
 
 
-## 📖 Methodology
+## 👁️ Methodology
 
 <div align="center">
   <img src="assets/method.png" width="100%"/>
