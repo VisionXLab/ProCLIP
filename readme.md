@@ -110,7 +110,7 @@ If you find our work helpful, please cite our paper:
 ```bibtex
 @misc{ProCLIP,
       title={ProCLIP: Progressive Vision-Language Alignment via LLM-based Embedder}, 
-      author={Xiaoxing Hu and Kaicheng Yang and Ziyong Feng and Qi Ming and Zonghao Guo and Xiang An and Ziyong Feng and Junchi Yan and Xue Yang},
+      author={Xiaoxing Hu and Kaicheng Yang and Ziyang Gong and Qi Ming and Zonghao Guo and Xiang An and Ziyong Feng and Junchi Yan and Xue Yang},
       year={2025},
       eprint={2510.18795},
       archivePrefix={arXiv},
