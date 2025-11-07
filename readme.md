@@ -114,6 +114,13 @@ If you find our work helpful, please cite our paper:
   journal={arXiv preprint arXiv:2510.18795},
   year={2025}
 }
+@inproceedings{hu2025decoupled,
+  title={Decoupled global-local alignment for improving compositional understanding},
+  author={Hu, Xiaoxing and Yang, Kaicheng and Wang, Jun and Xu, Haoran and Feng, Ziyong and Wang, Yupei},
+  booktitle={Proceedings of the 33rd ACM International Conference on Multimedia},
+  pages={3251--3260},
+  year={2025}
+}
 ```
 
 ## 📝 License
