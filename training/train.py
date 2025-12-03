@@ -51,6 +51,15 @@ def unwrap_model(model):
     else:
         return model
 
+
+def update_teacher_ema(student_model, teacher_model, alpha=0.996):
+    with torch.no_grad():
+        for param_s, param_t in zip(student_model.visual.parameters(),
+                                    teacher_model.visual.parameters()):
+            param_t.data = alpha * param_t.data + (1 - alpha) * param_s.data
+
+
+
 def get_loss_scale_for_deepspeed(model):
     optimizer = model.optimizer
     loss_scale = None
@@ -95,7 +104,8 @@ def train_one_epoch_stage1(model, data, epoch, optimizer, scaler, scheduler, arg
     sample_digits = math.ceil(math.log(dataloader.num_samples + 1, 10))
 
     loss_m = AverageMeter()
-    loss_clip_m = AverageMeter()
+    loss_distill_real = AverageMeter()
+    loss_distill_mse = AverageMeter()
     loss_scaler = AverageMeter()
     grad_norm_m = AverageMeter()
     batch_time_m = AverageMeter()
@@ -113,7 +123,8 @@ def train_one_epoch_stage1(model, data, epoch, optimizer, scaler, scheduler, arg
 
         images, texts = batch
 
-        short_text,short_feature , noise_text,noise_feature= batch
+        short_text,short_feature , noise_text,noise_feature= batch# we use short text and raw caption to distill in the stage1
+        
         short_text = tokenize(short_text).to(device = device)
         noise_text = tokenize(noise_text).to(device = device)
         short_feature  = short_feature.to(device=device, dtype=cast_dtype, non_blocking=True)
@@ -145,7 +156,7 @@ def train_one_epoch_stage1(model, data, epoch, optimizer, scaler, scheduler, arg
             s_short_d = F.pdist(short_features,p=2)
             realtion_loss = F.smooth_l1_loss(s_short_d,t_short_d,reduction='sum')
             total_loss += realtion_loss
-
+        total_loss = total_loss *0.1 # we use 0.1 to scale the loss in the defatult setting
         loss_list = [torch.zeros_like(total_loss) for _ in range(dist.get_world_size())]
         dist.all_gather(loss_list, total_loss)
         loss_list = torch.tensor(loss_list)
@@ -190,8 +201,9 @@ def train_one_epoch_stage1(model, data, epoch, optimizer, scaler, scheduler, arg
 
             # NOTE loss is coarsely sampled, just master node and per log update
             loss_m.update(total_loss.item(), batch_size)
-            loss_clip_m.update(clip_loss.item(), batch_size)
-
+            # loss_clip_m.update(clip_loss.item(), batch_size)
+            distill_loss_real.update(realtion_loss.item(), batch_size)
+            distill_loss_mse.update(mse_loss.item(), batch_size)
             logit_scale_scalar = logit_scale.item()
             if args.enable_deepspeed:
                 loss_scale_value, grad_nrom = get_loss_scale_for_deepspeed(model)
@@ -215,7 +227,8 @@ def train_one_epoch_stage1(model, data, epoch, optimizer, scaler, scheduler, arg
                 f"Global Steps: {step + 1} "
                 f"Train Epoch: {epoch} [{num_samples:>{sample_digits}}/{samples_per_epoch} ({percent_complete:.0f}%)] "
                 f"Loss: {loss_m.val:#.5g} ({loss_m.avg:#.4g}) "
-                f"Loss(CLIP): {loss_clip_m.val:#.5g} ({loss_clip_m.avg:#.4g}) "
+                f"Loss(distill_real): {loss_distill_real.val:#.5g} ({loss_distill_real.avg:#.4g}) "
+                f"Loss(distill_mse): {loss_distill_mse.val:#.5g} ({loss_distill_mse.avg:#.4g}) "
                 f"Grad Norm: {grad_norm_m.val:#.5g} ({grad_norm_m.avg:#.4g}) "
                 f"Loss Scaler: {loss_scaler.val:#.5g} ({loss_scaler.avg:#.4g}) "
                 f"LR: {optimizer.param_groups[0]['lr']:5f} "
@@ -286,6 +299,8 @@ def train_one_epoch_stage2(model, data, epoch, optimizer, scaler, scheduler, arg
 
     loss_m = AverageMeter()
     loss_clip_m = AverageMeter()
+    loss_distill_real = AverageMeter()
+    loss_distill_mse = AverageMeter()
     loss_scaler = AverageMeter()
     grad_norm_m = AverageMeter()
     batch_time_m = AverageMeter()
@@ -369,7 +384,8 @@ def train_one_epoch_stage2(model, data, epoch, optimizer, scaler, scheduler, arg
         batch_time_m.update(time.time() - end)
         end = time.time()
         batch_count = i + 1
-        
+        if args.ema_teacher:
+            update_teacher_ema(model,teacher_model,alpha=args.ema_alpha)#TODO:ema
         if is_master(args) and (i % args.log_every_n_steps == 0 or batch_count == num_batches_per_epoch):
             batch_size = len(images)
             num_samples = batch_count * batch_size * args.world_size
@@ -379,7 +395,8 @@ def train_one_epoch_stage2(model, data, epoch, optimizer, scaler, scheduler, arg
             # NOTE loss is coarsely sampled, just master node and per log update
             loss_m.update(total_loss.item(), batch_size)
             loss_clip_m.update(clip_loss.item(), batch_size)
-
+            loss_distill_real.update(realtion_loss.item(), batch_size)
+            loss_distill_mse.update(mse_distill_loss.item(), batch_size)
             logit_scale_scalar = logit_scale.item()
             if args.enable_deepspeed:
                 loss_scale_value, grad_nrom = get_loss_scale_for_deepspeed(model)
@@ -404,6 +421,8 @@ def train_one_epoch_stage2(model, data, epoch, optimizer, scaler, scheduler, arg
                 f"Train Epoch: {epoch} [{num_samples:>{sample_digits}}/{samples_per_epoch} ({percent_complete:.0f}%)] "
                 f"Loss: {loss_m.val:#.5g} ({loss_m.avg:#.4g}) "
                 f"Loss(CLIP): {loss_clip_m.val:#.5g} ({loss_clip_m.avg:#.4g}) "
+                f"Loss(distill_real): {loss_distill_real.val:#.5g} ({loss_distill_real.avg:#.4g}) "
+                f"Loss(distill_mse): {loss_distill_mse.val:#.5g} ({loss_distill_mse.avg:#.4g}) "
                 f"Grad Norm: {grad_norm_m.val:#.5g} ({grad_norm_m.avg:#.4g}) "
                 f"Loss Scaler: {loss_scaler.val:#.5g} ({loss_scaler.avg:#.4g}) "
                 f"LR: {optimizer.param_groups[0]['lr']:5f} "

@@ -13,6 +13,45 @@ def get_default_params(model_name):
 def parse_args(args):
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "--distill",
+        default = False,
+        action='store_true',
+    )
+
+    parser.add_argument(
+        "--distill-loss-weight",
+        type=float,
+        default=0.0004,#distill loss weight in the stage2
+    )
+parser.add_argument(
+        "--ema-teacher",
+        action='store_true',
+    )
+    parser.add_argument(
+        "--ema-alpha",
+        type=float,
+        default=1.0,
+    )
+    parser.add_argument(
+        "--teacher",
+        type=str,
+        default="OpenaiCLIP-L-14_t",
+        help="Name of the vision backbone in teacher model to use.",
+    )
+    parser.add_argument(
+        "--teacher-pretrained",
+        default='your_path/ViT-L-14.pt',#openai pretrained model
+        type=str,
+        help="Use a pretrained model weights with the specified tag or file path (teacher model).",
+    )    
+
+    parser.add_argument(
+        "--train-stage",
+        type=int,
+        default=-1,
+        help="Name of the dataset",
+    )
+    parser.add_argument(
         "--train-data",
         type=str,
         default=None,

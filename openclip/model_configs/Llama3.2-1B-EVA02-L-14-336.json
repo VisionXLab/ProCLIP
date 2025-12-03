@@ -1,5 +1,5 @@
 {
-    "embed_dim": 1280,
+    "embed_dim": 1024,
     "vision_cfg": {
         "image_size": 336,
         "layers": 24,

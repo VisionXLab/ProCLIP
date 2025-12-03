@@ -1,9 +1,10 @@
 import logging
 import os
 import sys
+sys.path.append('your_path/ProCLIP')
+
 import random
 from datetime import datetime
-sys.path.append(os.getcwd())
 
 import numpy as np
 import torch
@@ -19,17 +20,23 @@ try:
 except ImportError:
     tensorboard = None
 
-from eva_clip import create_model_and_transforms, create_model_from_pretrained, trace_model, get_tokenizer
+from llm2clip.eva_clip import create_model_and_transforms, create_model_from_pretrained, trace_model, get_tokenizer,create_model
 
-from training.data import get_data
-from training.distributed import is_master, init_distributed_device, world_info_from_env, create_deepspeed_config
-from training.logger import setup_logging
-from training.params import parse_args
-from training.scheduler import warmup_cosine_lr
-from training.train import train_one_epoch, evaluate, extract_features
-from training.optim import create_optimizer, get_all_parameters
+from llm2clip.training.data import get_data
+from llm2clip.training.distributed import is_master, init_distributed_device, world_info_from_env, create_deepspeed_config
+from llm2clip.training.logger import setup_logging
+from llm2clip.training.params import parse_args
+from llm2clip.training.scheduler import warmup_cosine_lr
+from llm2clip.training.train import train_one_epoch, evaluate, extract_features
+from llm2clip.training.optim import create_optimizer, get_all_parameters
 
 from peft import LoraConfig, get_peft_model
+
+def load_unused_keys(path):
+    unsed_keys = set()
+    with open(path, 'r') as f:
+        unsed_keys = set(line.strip() for line in f if line.strip())
+    return unsed_keys
 
 
 def random_seed(seed=42, rank=0):
@@ -292,7 +299,7 @@ def main(args):
                 logging.info("=> no checkpoint found at '{}'".format(args.resume))
 
     # initialize datasets
-    data = get_data(args, (preprocess_train, preprocess_val), epoch=start_epoch, tokenizer=get_tokenizer(args.model))
+    data = get_data(args, (preprocess_train, preprocess_val),epoch=start_epoch)
     assert len(data), 'At least one train or eval dataset must be specified.'
 
     # create scheduler if train
@@ -339,6 +346,21 @@ def main(args):
     if 'train' not in data:
         evaluate(model, data, start_epoch, args, writer)
         return
+    distill_kwargs = {}    
+    if args.distill:
+        teacher_model= create_model(
+        model_name=args.teacher,
+        pretrained=args.teacher_pretrained,
+        precision = args.precision,
+        )
+        teacher_model.to(device)
+        teacher_model = teacher_model.to(dtype=torch.bfloat16)
+        for param in teacher_model.parameters():
+            param.requires_grad = False
+        teacher_model.eval()
+        distill_kwargs = {
+            'teacher_model': teacher_model
+        }
 
     # torch.cuda.synchronize()
     # evaluate(model, data, -1, args, writer)
@@ -346,7 +368,12 @@ def main(args):
         if is_master(args):
             logging.info(f'Start epoch {epoch}')
 
-        train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, writer)
+        if args.train_stage == 1:
+            train_one_epoch_stage1(model, data, epoch, optimizer, scaler, scheduler, args, writer,**distill_kwargs)
+        elif args.train_stage == 2:
+            train_one_epoch_stage2(model, data, epoch, optimizer, scaler, scheduler, args, writer,**distill_kwargs)
+        else:
+            train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, writer)
         completed_epoch = epoch + 1
 
         if any(v in data for v in ('val', 'imagenet-val', 'imagenet-v2')):

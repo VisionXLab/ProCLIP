@@ -37,11 +37,12 @@ Official PyTorch implementation of [ProCLIP: Progressive Vision-Language Alignme
 This repository is still being organized and refined. If you encounter any issues while using it, please contact |Email: xiaoxinghhh@gmail.com|WeChat: 15111480307| or submit an issue. Thank you for your attention.
 
 ## TODO
-- [ ] Training and validation instruction
+- [x] Training instruction
 - [x] Paper Link
 - [x] Model Weights
 
 ## 📢 News
+- [2025-12-03] We have released the training instructions, please check the [Training](training.md) for details.
 - [2025-10-20] We have model weights, please check the [Model Zoo](https://huggingface.co/VisionXLab/ProCLIP) for details.
 - [2025-10-22] We have update the paper, please check the [arXiv](https://arxiv.org/abs/2510.18795) for details.
 ## 📖 Introduction
@@ -83,13 +84,13 @@ conda activate proclip
 pip install -r requirements.txt
 ```
 
-### Training
-Coming soon.
-
+##  Training
+Please check the [Training](training.md) for details.
 
 ### Evaluation
-Coming soon.
-
+For evluation, we evaluate our model according different code base, by the time you can refer to them:
+[1] https://github.com/MIV-XJTU/FLAME
+[2] https://github.com/LAION-AI/CLIP_benchmark
 ## 📊 Results
 
 ### Retrieval Results

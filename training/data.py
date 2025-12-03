@@ -15,7 +15,7 @@ import glob
 import yaml
 from pathlib import Path
 import wids
-
+from functools import partial
 # import braceexpand
 import numpy as np
 import pandas as pd
@@ -117,7 +117,24 @@ class RetrievalDataset(Dataset):
          
         return images, texts
     
-    
+COCO_DATASET_ROOT = '/workspace/xiaoxinghu/xx_data/coco2014'    
+class COCO_dataset(Dataset):
+    def __init__(self,samples_path,transforms=None,train_num_samples=None,tokenizer=None):
+        self.transforms = transforms
+        self.tokenize = tokenizer
+        with open(samples_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        self.samples = data
+    def __len__(self):
+        return len(self.samples)
+    def __getitem__(self,index):
+        image_id = self.samples[index]['image_id']
+        image_path = os.path.join(COCO_DATASET_ROOT,'train2014',f"COCO_train2014_{'0'*(12-len(str(image_id)))}{image_id}.jpg")
+        image = self.transforms(Image.open(image_path).convert("RGB"))
+        text = self.tokenize([str(self.samples[index]['original'])])[0]
+        return image,text
+
+
 class JsonDataset(Dataset):
     def __init__(self, input_filename, transforms, img_root=None, img_feature_path=None,
                 text_feature_path=None, tokenizer=None, is_wds=False):
@@ -328,9 +345,10 @@ def count_samples(dataloader):
 
 
 def filter_no_caption_or_no_image(sample):
-    has_caption = ('txt' in sample or '0.txt' in sample)
+    
+    has_caption = ('short.pt' in sample or 'long.pt' in sample)
     has_image = ('png' in sample or 'jpg' in sample or 'jpeg' in sample or 'webp' in sample or '0.png' in sample)
-    return has_caption and has_image 
+    return has_caption and has_image
 
 
 def log_and_continue(exn):
@@ -519,37 +537,40 @@ def get_real_wds_size(shards):
     return count
 
 
-find_column_url = lambda x: x.replace(".tar", "_text_embeddings.tar")
-def add_column(src, find_column_url=find_column_url):
-    """Given an iterator over a dataset, add an extra column from a separate dataset."""
-    last_url = None
-    column_src = None
-    for sample in src:
-        # We use the __url__ field to keep track of which shard we are working on.
-        # We then open the corresponding URL for the extra column data if necessary.
-        if last_url != sample["__url__"]:
-            column_url = find_column_url(sample["__url__"])
-            print("*** opening column_url", column_url)
-            # column_src = iter(wds.WebDataset(column_url, shardshuffle=False))
-            column_src = wds.tarfile_samples([dict(url=column_url)])
-            last_url = sample["__url__"]
-        # Read the next sample from the extra column data.
-        try:
-            extra = next(column_src)
-        except StopIteration:
-            column_src = wds.tarfile_samples([dict(url=column_url)])
-            extra = next(column_src)
-            logging.info(f"*** column_src exhausted, reset")
-        # Check that the keys match.
-        assert extra["__key__"] == sample["__key__"]
-        # Update the sample with the extra data.
-        for k, v in extra.items():
-            if k[0] != "_":
-                sample[k] = v
-        yield sample
+_KEYS = ["noise.pt","short.pt", "long.pt"]
 
 
-def get_wds_dataset(args, preprocess_img, is_train, epoch=0, floor=False, tokenizer=None):
+_WEIGHTS = [0.2,0.4,0.4]
+def load_feature_stage1(item):
+    sample = {}
+
+    #flickr
+    if len(item['__key__']) > 12:
+        noise_text = item['raw.txt']
+    else:
+        noise_text = item['txt']
+    short_text = item['short.txt']
+    noise_feature = torch.load(io.BytesIO(item['noise.pt']), map_location='cpu')
+    short_feature = torch.load(io.BytesIO(item['short.pt']), map_location='cpu')
+    sample['short.txt'] = short_text
+    sample['noise.txt'] = noise_text
+    sample['short_feature'] = short_feature
+    sample['noise_feature'] = noise_feature
+    return sample
+
+def load_feature_stage2(item):
+    sample = {}
+    sample['image'] = item['jpg']
+    FEATURE_KEY = random.choices(_KEYS, weights=_WEIGHTS, k=1)[0]
+    try:
+
+        feature = torch.load(io.BytesIO(item[FEATURE_KEY]), map_location='cpu')
+    except Exception as e:
+        feature = torch.zeros(4096)
+    
+    sample['text'] = feature
+    return sample    
+def get_wds_dataset(args, preprocess_img, is_train, epoch=0, floor=False ):
     input_shards = args.train_data if is_train else args.val_data
     assert input_shards is not None
     resampled = getattr(args, 'dataset_resampled', False) and is_train
@@ -578,6 +599,9 @@ def get_wds_dataset(args, preprocess_img, is_train, epoch=0, floor=False, tokeni
         pipeline = [wds.SimpleShardList(all_shards)]
 
     # at this point we have an iterator over all the shards
+
+
+
     if is_train:
         if not resampled:
             pipeline.extend([
@@ -593,7 +617,6 @@ def get_wds_dataset(args, preprocess_img, is_train, epoch=0, floor=False, tokeni
         pipeline.extend([
             # at this point, we have an iterator over the shards assigned to each worker at each node
             tarfile_to_samples_nothrow,  # wds.tarfile_to_samples(handler=log_and_continue),
-            add_column,
             wds.shuffle(
                 bufsize=_SAMPLE_SHUFFLE_SIZE,
                 initial=_SAMPLE_SHUFFLE_INITIAL,
@@ -607,25 +630,27 @@ def get_wds_dataset(args, preprocess_img, is_train, epoch=0, floor=False, tokeni
             # at this point, we have an iterator over the shards assigned to each worker
             wds.tarfile_to_samples(handler=log_and_continue),
         ])
-    
-    _KEYS = ["shortsv_captions", "longsv_captions"]
-    def get_text(item):
-        sample = {}
-        sample['image'] = item['jpg']            
-        f1 = np.frombuffer(item[_KEYS[0]], dtype=np.float32)
-        f2 = np.frombuffer(item[_KEYS[1]], dtype=np.float32)
-        sample['text'] =  random.choice([f1, f2])
-        return sample
 
-    pipeline.extend([
-        # wds.select(filter_no_caption_or_no_image),
-        wds.decode("pilrgb", handler=log_and_continue),
-        # wds.rename(image="jpg;png;jpeg;webp",),
-        wds.map(get_text),
-        wds.map_dict(image=preprocess_img),
-        wds.to_tuple("image", "text"),
-        wds.batched(args.batch_size, partial=not is_train),
-    ])
+#----------FOR STAGE1--------------------------
+    if args.train_stage == 1:
+        pipeline.extend([
+            wds.select(filter_no_caption_or_no_image),
+            wds.decode("pilrgb", handler=log_and_continue),
+            wds.map(load_feature),
+            wds.to_tuple("short.txt","short_feature","noise.txt","noise_feature"),
+            wds.batched(args.batch_size, partial=not is_train)
+        ])
+    elif args.train_stage == 2:
+        pipeline.extend([
+            wds.select(filter_no_caption_or_no_image),
+            wds.decode("pilrgb", handler=log_and_continue),
+            wds.map(load_feature_stage2),
+            wds.map_dict(image=preprocess_img),
+            wds.to_tuple("image", "text",),
+            wds.batched(args.batch_size, partial=not is_train)
+        ])
+
+#------------------------------------------------------------
     dataset = wds.DataPipeline(*pipeline)
     if is_train:
         if not resampled:
@@ -649,6 +674,7 @@ def get_wds_dataset(args, preprocess_img, is_train, epoch=0, floor=False, tokeni
         shuffle=False,
         num_workers=args.workers,
         persistent_workers=False,
+        prefetch_factor=2,
     )
 
     # FIXME not clear which approach is better, with_epoch before vs after dataloader?
@@ -675,7 +701,7 @@ class MixingDataLoader:
     """Mixing different datasets with round-robin or weighted round-robin
     Adpated from https://github.com/mlfoundations/open_clip/pull/107/files
     """
-    def __init__(self, args, preprocess_train, epoch, tokenizer, sample_weights=False):
+    def __init__(self, args, preprocess_train,epoch, sample_weights=False):
         train_data_list = args.train_data_list.split(';')
         dataset_type_list = args.dataset_type_list.split(';') if args.dataset_type_list else ['webdataset' for _ in range(len(train_data_list))]
         if not args.train_num_samples_list or len(args.train_num_samples_list) != len(train_data_list):
@@ -689,7 +715,7 @@ class MixingDataLoader:
             args.train_num_samples = train_num_samples
             data_train.append(
                 get_dataset_fn(train_data, dataset_type)(
-                    args, preprocess_train, is_train=True, epoch=epoch, tokenizer=tokenizer)
+                    args, preprocess_train,is_train=True, epoch=epoch)
             )
 
         self.args = args
@@ -868,7 +894,29 @@ class SyntheticDataset(Dataset):
             image = self.transform(self.image)
         return image, self.preprocess_txt(self.caption)
 
+def get_coco_dataset(args, preprocess_fn, is_train, epoch=0, tokenizer=None):
+    input_filename = args.train_data
+    assert input_filename
+    dataset = COCO_dataset(
+        input_filename,
+        preprocess_fn,
+        tokenizer=tokenizer)
+    num_samples = len(dataset)
+    sampler = DistributedSampler(dataset) if args.distributed and is_train else None
+    shuffle = is_train and sampler is None
 
+    dataloader = DataLoader(
+        dataset,
+        batch_size=args.batch_size,
+        shuffle=shuffle,
+        num_workers=args.workers,
+        pin_memory=True,
+        sampler=sampler,
+        drop_last=is_train,
+    )
+    dataloader.num_samples = num_samples
+    dataloader.num_batches = len(dataloader)
+    return DataInfo(dataloader, sampler)
 def get_synthetic_dataset(args, preprocess_fn, is_train, epoch=0, tokenizer=None):
     image_size = preprocess_fn.transforms[0].size
     dataset = SyntheticDataset(
@@ -894,6 +942,9 @@ def get_synthetic_dataset(args, preprocess_fn, is_train, epoch=0, tokenizer=None
 def get_dataset_fn(data_path, dataset_type):
     if dataset_type == "webdataset":
         return get_wds_dataset
+
+    elif dataset_type == "coco":
+        return get_coco_dataset
     elif dataset_type == 'json':
         return get_json_dataset
     elif dataset_type == "csv":
@@ -912,9 +963,9 @@ def get_dataset_fn(data_path, dataset_type):
     else:
         raise ValueError(f"Unsupported dataset type: {dataset_type}")
     
-def get_mixing_dataset_fn(args, preprocess_train, epoch, tokenizer):
+def get_mixing_dataset_fn(args, preprocess_train, epoch):
     sample_weights = True if args.train_num_samples_list else False
-    dataloader = MixingDataLoader(args, preprocess_train, epoch, tokenizer, sample_weights)
+    dataloader = MixingDataLoader(args, preprocess_train, epoch, sample_weights)
     shared_epoch = SharedEpoch(epoch=epoch)  # create a shared epoch store to sync epoch to dataloader worker proc
     return DataInfo(dataloader, shared_epoch)
 
@@ -963,7 +1014,7 @@ def get_concat_dataset_fn(args, preprocess_train, epoch, tokenizer, is_train=Tru
     dataloader.num_batches = len(dataloader)
     return DataInfo(dataloader, sampler)
 
-def get_data(args, preprocess_fns, epoch=0, tokenizer=None):
+def get_data(args, preprocess_fns, epoch=0,tokenizer = None):
     preprocess_train, preprocess_val = preprocess_fns
     data = {}
 
@@ -973,16 +1024,16 @@ def get_data(args, preprocess_fns, epoch=0, tokenizer=None):
         # shared_epoch = SharedEpoch(epoch=epoch)  # create a shared epoch store to sync epoch to dataloader worker proc
         # data["train"] = DataInfo(dataloader, shared_epoch)
 
-        data["train"] = get_mixing_dataset_fn(args, preprocess_train, epoch, tokenizer)
+        data["train"] = get_mixing_dataset_fn(args, preprocess_train, epoch)
     elif args.train_data or args.dataset_type == "synthetic":
         data["train"] = get_dataset_fn(args.train_data, args.dataset_type)(
-            args, preprocess_train, is_train=True, epoch=epoch, tokenizer=tokenizer)
+            args, preprocess_train, is_train=True, epoch=epoch )
     elif args.train_data_file:
-        data["train"] = get_concat_dataset_fn(args, preprocess_train, epoch, tokenizer)
+        data["train"] = get_concat_dataset_fn(args, preprocess_train, epoch, )
 
     if args.val_data:
         data["val"] = get_dataset_fn(args.val_data, args.dataset_type)(
-            args, preprocess_val, is_train=False, tokenizer=tokenizer)
+            args, preprocess_val, is_train=False, )
 
     if args.imagenet_val is not None:
         # data["imagenet-val"] = get_imagenet(args, preprocess_fns, "val")
