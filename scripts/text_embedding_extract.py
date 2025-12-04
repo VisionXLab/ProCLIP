@@ -88,7 +88,7 @@ def encode_text(args, data_loader):
             s4v_short_embedding = s4v_short_embeddings[i].squeeze().clone()
             s4v_long_embedding = s4v_long_embeddings[i].squeeze().clone()
 
-            bio_short = io.BytesIO()
+            bio_raw_caption = io.BytesIO()
             torch.save(raw_caption_embedding.cpu(), bio_raw_caption)  
             bio_raw_caption.seek(0)  
 

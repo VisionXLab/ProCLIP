@@ -20,15 +20,16 @@ try:
 except ImportError:
     tensorboard = None
 
-from llm2clip.eva_clip import create_model_and_transforms, create_model_from_pretrained, trace_model, get_tokenizer,create_model
+from openclip.eva_clip import create_model_and_transforms, create_model_from_pretrained, trace_model, get_tokenizer,create_model
 
-from llm2clip.training.data import get_data
-from llm2clip.training.distributed import is_master, init_distributed_device, world_info_from_env, create_deepspeed_config
-from llm2clip.training.logger import setup_logging
-from llm2clip.training.params import parse_args
-from llm2clip.training.scheduler import warmup_cosine_lr
-from llm2clip.training.train import train_one_epoch, evaluate, extract_features
-from llm2clip.training.optim import create_optimizer, get_all_parameters
+from training.data import get_data
+from training.distributed import is_master, init_distributed_device, world_info_from_env, create_deepspeed_config
+from training.logger import setup_logging
+from training.params import parse_args
+from training.scheduler import warmup_cosine_lr
+from training.train import train_one_epoch, evaluate, extract_features
+from training.optim import create_optimizer, get_all_parameters
+from training.train import train_one_epoch_stage1, train_one_epoch_stage2
 
 from peft import LoraConfig, get_peft_model
 
