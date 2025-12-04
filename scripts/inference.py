@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/data/xiaoxinghhh/code/ProCLIP")
+sys.path.append("your_path/ProCLIP")
 
 from openclip import create_model_and_transforms
 from PIL import Image
@@ -8,7 +8,7 @@ import torch
 
 model, _, preprocess_val = create_model_and_transforms(
     model_name="ViT-L-14",
-    pretrained="/data/xiaoxinghhh/code/ProCLIP/checkpoints/L14.pt",
+    pretrained="yout_path/checkpoints/L14.pt",
     force_quick_gelu=True,
     force_custom_clip=True,
     eval=True
