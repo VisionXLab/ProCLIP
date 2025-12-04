@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from llm2vec import LLM2Vec
+from openclip.llm2vec import LLM2Vec
 
 class LLM2VecTextTransformer(nn.Module):
     def __init__(self, text_proj=None):

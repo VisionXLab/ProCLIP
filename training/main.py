@@ -20,14 +20,14 @@ try:
 except ImportError:
     tensorboard = None
 
-from openclip.eva_clip import create_model_and_transforms, create_model_from_pretrained, trace_model, get_tokenizer,create_model
+from openclip import create_model_and_transforms, trace_model,create_model
 
 from training.data import get_data
 from training.distributed import is_master, init_distributed_device, world_info_from_env, create_deepspeed_config
 from training.logger import setup_logging
 from training.params import parse_args
 from training.scheduler import warmup_cosine_lr
-from training.train import train_one_epoch, evaluate, extract_features
+from training.train import evaluate, extract_features
 from training.optim import create_optimizer, get_all_parameters
 from training.train import train_one_epoch_stage1, train_one_epoch_stage2
 

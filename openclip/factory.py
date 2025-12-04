@@ -21,6 +21,10 @@ from .utils import resize_clip_pos_embed, resize_evaclip_pos_embed, resize_visua
 _MODEL_CONFIG_PATHS = [Path(__file__).parent / f"model_configs/"]
 _MODEL_CONFIGS = {}  # directory (model_name: config) of model architecture configs
 
+_MODEL_CONFIG_PATHS_EVAL = [Path(__file__).parent / f"model_configs_eval/"]
+_MODEL_CONFIGS_EVAL = {}  # directory (model_name: config) of model architecture configs
+
+
 
 def _natural_key(string_):
     return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_.lower())]
@@ -50,6 +54,30 @@ def _rescan_model_configs():
 _rescan_model_configs()  # initial populate of model config registry
 
 
+def _rescan_model_configs_eval():
+    global _MODEL_CONFIGS_EVAL
+
+    config_ext = ('.json',)
+    config_files = []
+    for config_path in _MODEL_CONFIG_PATHS_EVAL:
+        if config_path.is_file() and config_path.suffix in config_ext:
+            config_files.append(config_path)
+        elif config_path.is_dir():
+            for ext in config_ext:
+                config_files.extend(config_path.glob(f'*{ext}'))
+
+    for cf in config_files:
+        with open(cf, "r", encoding="utf8") as f:
+            model_cfg = json.load(f)
+            if all(a in model_cfg for a in ('embed_dim', 'vision_cfg', 'text_cfg')):
+                _MODEL_CONFIGS_EVAL[cf.stem] = model_cfg
+
+    _MODEL_CONFIGS_EVAL = dict(sorted(_MODEL_CONFIGS_EVAL.items(), key=lambda x: _natural_key(x[0])))
+
+
+_rescan_model_configs_eval()  # initial populate of model config registry
+
+
 def list_models():
     """ enumerate available model architectures based on config files """
     return list(_MODEL_CONFIGS.keys())
@@ -62,12 +90,19 @@ def add_model_config(path):
     _MODEL_CONFIG_PATHS.append(path)
     _rescan_model_configs()
 
+def get_model_config_eval(model_name):
+    if model_name in _MODEL_CONFIGS_EVAL:
+        return deepcopy(_MODEL_CONFIGS_EVAL[model_name])
+    else:
+        return None
+
 
 def get_model_config(model_name):
     if model_name in _MODEL_CONFIGS:
         return deepcopy(_MODEL_CONFIGS[model_name])
     else:
         return None
+
 
 
 def get_tokenizer(model_name):
@@ -122,18 +157,18 @@ def load_checkpoint(model, checkpoint_path, model_key="model|module|state_dict",
         resize_evaclip_pos_embed(state_dict, model)
         
     # specified to train with LLM features
-    for k in list(state_dict.keys()):
-        if 'text' in k:
-            del state_dict[k]
-        if 'visual.head'in k:
-            del state_dict[k]
+    # for k in list(state_dict.keys()):
+    #     if 'text' in k:
+    #         del state_dict[k]
+    #     if 'visual.head'in k:
+    #         del state_dict[k]
             
     # modify model
-    for k in list(state_dict.keys()):
-        if 'visual' in k and 'q_bias'in k:
-            state_dict[k.replace('q_bias','q_proj.bias')] = state_dict[k]
-        if 'visual' in k and 'v_bias'in k:
-            state_dict[k.replace('v_bias','v_proj.bias')] = state_dict[k]
+    # for k in list(state_dict.keys()):
+    #     if 'visual' in k and 'q_bias'in k:
+    #         state_dict[k.replace('q_bias','q_proj.bias')] = state_dict[k]
+    #     if 'visual' in k and 'v_bias'in k:
+    #         state_dict[k.replace('v_bias','v_proj.bias')] = state_dict[k]
                   
     # resize_clip_pos_embed(state_dict, model)
     incompatible_keys = model.load_state_dict(state_dict, strict=strict)
@@ -236,6 +271,7 @@ def create_model(
         pretrained_text_model: str = None,
         cache_dir: Optional[str] = None,
         skip_list: list  = [],
+        eval = False
 ):
     model_name = model_name.replace('/', '-')  # for callers using old naming with / in ViT names
     if isinstance(device, str):
@@ -251,7 +287,10 @@ def create_model(
             cache_dir=cache_dir,
         )
     else:
-        model_cfg = get_model_config(model_name)
+        if eval:
+            model_cfg = get_model_config_eval(model_name)
+        else:   
+            model_cfg = get_model_config(model_name)
         if model_cfg is not None:
             logging.info(f'Loaded {model_name} model config.')
         else:
@@ -385,6 +424,7 @@ def create_model_and_transforms(
         image_std: Optional[Tuple[float, ...]] = None,
         cache_dir: Optional[str] = None,
         skip_list: list = [],
+        eval = False
 ):
     model = create_model(
         model_name,
@@ -402,6 +442,7 @@ def create_model_and_transforms(
         pretrained_text_model=pretrained_text_model,
         cache_dir=cache_dir,
         skip_list=skip_list,
+        eval = eval
     )
 
     image_mean = image_mean or getattr(model.visual, 'image_mean', None)

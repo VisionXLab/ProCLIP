@@ -21,6 +21,8 @@ from .timm_model import TimmModel
 from .eva_vit_model import EVAVisionTransformer
 from .transformer import LayerNorm, QuickGELU, Attention, VisionTransformer, TextTransformer, LayerNormFp32
 from .llm_model import LLM2VecTextTransformer
+from transformers import AutoTokenizer,AutoModel,CLIPTextModel,AutoConfig
+from openclip.llm2vec import LLM2Vec
 try:
     from apex.normalization import FusedLayerNorm
 except:
@@ -261,6 +263,7 @@ class CLIP(nn.Module):
             text_cfg: CLIPTextCfg,
             quick_gelu: bool = False,
             cast_dtype: Optional[torch.dtype] = None,
+
     ):
         super().__init__()
         self.visual = _build_vision_tower(embed_dim, vision_cfg, quick_gelu, cast_dtype)
@@ -273,8 +276,7 @@ class CLIP(nn.Module):
         self.text_projection = text.text_projection
         self.register_buffer('attn_mask', text.attn_mask, persistent=False)
 
-        self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
-
+        self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07)) 
     def lock_image_tower(self, unlocked_groups=0, freeze_bn_stats=False):
         # lock image tower as per LiT - https://arxiv.org/abs/2111.07991
         self.visual.lock(unlocked_groups=unlocked_groups, freeze_bn_stats=freeze_bn_stats)
@@ -321,12 +323,28 @@ class CustomCLIP(nn.Module):
             quick_gelu: bool = False,
             cast_dtype: Optional[torch.dtype] = None,
             itm_task: bool = False,
+            llm_name: str = None,
+            llm_dir : str = None,
     ):
         super().__init__()
         self.visual = _build_vision_tower(embed_dim, vision_cfg, quick_gelu, cast_dtype)
         self.text = _build_text_tower(embed_dim, text_cfg, quick_gelu, cast_dtype)
         self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
-
+        self.llm_name = llm_name
+        if llm_name == "llama_cc":
+            print("loading {} from {}".format(llm_name, llm_dir))
+            config = AutoConfig.from_pretrained(llm_dir, trust_remote_code=True)
+            llm_model = AutoModel.from_pretrained(
+                llm_dir,
+                torch_dtype=torch.bfloat16,
+                config=config,
+                trust_remote_code=True,
+            )
+            tokenizer = AutoTokenizer.from_pretrained(llm_dir)
+            llm_model.config._name_or_path = "meta-llama/Meta-Llama-3-8B-Instruct"  # Workaround for LLM2VEC
+            self.llm_base = LLM2Vec(
+                llm_model, tokenizer, pooling_mode="mean", max_length=512, doc_max_length=512
+            ) 
     def lock_image_tower(self, unlocked_groups=0, freeze_bn_stats=False):
         # lock image tower as per LiT - https://arxiv.org/abs/2111.07991
         self.visual.lock(unlocked_groups=unlocked_groups, freeze_bn_stats=freeze_bn_stats)
@@ -351,6 +369,9 @@ class CustomCLIP(nn.Module):
         return F.normalize(features, dim=-1) if normalize else features
 
     def encode_text(self, text, normalize: bool = False):
+        if self.llm_name == 'llama_cc':
+            text = self.llm_base.encode(text,convert_to_tensor = True)
+            text = text.cuda() if torch.cuda.is_available() else text
         features = self.text(text)
         return F.normalize(features, dim=-1) if normalize else features
 

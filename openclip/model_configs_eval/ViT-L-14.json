@@ -1,0 +1,19 @@
+{
+    "llm_name": "llama_cc",
+    "llm_dir": "/data/xiaoxinghhh/code/ProCLIP/checkpoints/llama_cc",
+    "embed_dim": 768,
+    "vision_cfg": {
+        "image_size": 224,
+        "layers": 24,
+        "width": 1024,
+        "patch_size": 14
+    },
+    "text_cfg": {
+        "use_embedding": true,
+        "context_length": 77,
+        "vocab_size": 49408,
+        "width": 768,
+        "heads": 12,
+        "layers": 12
+    }
+}
