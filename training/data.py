@@ -117,7 +117,7 @@ class RetrievalDataset(Dataset):
          
         return images, texts
     
-COCO_DATASET_ROOT = '/workspace/xiaoxinghu/xx_data/coco2014'    
+COCO_DATASET_ROOT = 'your_path/coco2014'    
 class COCO_dataset(Dataset):
     def __init__(self,samples_path,transforms=None,train_num_samples=None,tokenizer=None):
         self.transforms = transforms

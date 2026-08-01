@@ -1,6 +1,6 @@
 {
     "llm_name": "llama_cc",
-    "llm_dir": "/data/xiaoxinghhh/code/ProCLIP/checkpoints/llama_cc",
+    "llm_dir": "your_path/ProCLIP/checkpoints/llama_cc",
     "embed_dim": 768,
     "vision_cfg": {
         "image_size": 224,

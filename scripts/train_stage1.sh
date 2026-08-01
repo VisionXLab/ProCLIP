@@ -1,6 +1,6 @@
 MODEL=OpenaiCLIP-L-14
 # we use the pretrained openai clip as our base model
-PRETRAINED=yout_path/ViT-L-14.pt
+PRETRAINED=your_path/ViT-L-14.pt
 echo "start training"
 cd your_path/ProCLIP
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 torchrun --nproc_per_node=8 --master_port=29501 \
